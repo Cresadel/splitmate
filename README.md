@@ -1,28 +1,32 @@
-# SplitMate (lean version)
-React + Vite + Tailwind + Supabase bill splitter.
+# SplitMate
+SplitMate is a bill splitter for roommates sharing an apartment or boarding house.
+
+## Features
+- **Budget**: plan monthly bills and see how much each roommate pays.
+- **Payments**: track who has paid their share with Paid, Partial, Unpaid or Advance status.
+- **Expenses**: record shared costs and choose who shares them.
+- **Balances**: see the simplest way to settle up with "Who pays whom".
+- **Settlements**: record payments made to settle debts.
+- **Roommates**: add and remove roommates.
+- **How to use**: open the in-app guide from the header.
+
+## Rules
+- One account can belong to only one active apartment.
+- Only the owner can add roommates by email.
+- A roommate who leaves stays in the history until their balance is settled.
+
+## Tech stack
+React, Vite, Tailwind CSS, React Router, and Supabase (Auth, PostgreSQL, Row Level Security, SQL functions).
 
 ## Setup
-1. Create a Supabase project. In the SQL Editor, run `supabase/migrations/001_schema.sql`.
-2. (Optional, easier testing) Authentication > Providers > Email: turn off "Confirm email".
-3. `cp .env.example .env`, then fill in your project URL and anon key (never the service role key).
-4. `npm install` then `npm run dev`.
+1. Create a Supabase project.
+2. Run the SQL files in `supabase/migrations` in the SQL Editor.
+3. Copy `.env.example` to `.env` and fill in the project URL and publishable key. Never use the service role key.
+4. Run `npm install`.
+5. Run `npm run dev`.
 
-## Notes
-- Expenses and settlements are created only through the `create_expense` / `create_settlement` database functions, so shares always add up and debts are validated.
-- Balances are calculated live: Net = Paid - Shares + Settlements Paid - Settlements Received.
-- Not included yet: group editing, images, expense editing, expense history page with filters, charts, activity feed.
-
-## Demo seed (boarding house) — testing only
-The seed script creates five demo users and a "Boarding House" group so you can test Balances and "Who pays whom".
-
-1. Turn off "Confirm email" (Authentication > Providers > Email) so the script can sign in the demo users.
-2. Run `npm run seed:boardinghouse`.
-3. Log in as any demo user, for example `mia.demo@splitmate.test` / `SplitMateDemo123!`.
-
-Demo emails: `mia.demo@splitmate.test`, `joy.demo@splitmate.test`, `karl.demo@splitmate.test`, `ben.demo@splitmate.test`, `lea.demo@splitmate.test`. Password for all: `SplitMateDemo123!`.
-
-Expected balances: Mia +₱335.00, Joy -₱2,065.00, Karl +₱35.00, Lea +₱3,535.00, Ben -₱1,840.00.
-
-Expected simplified payments: Joy pays Lea ₱2,065.00, Ben pays Lea ₱1,470.00, Ben pays Mia ₱335.00, Ben pays Karl ₱35.00.
-
-Re-running is safe: if Mia's "Boarding House" group already exists, the script exits without adding duplicates.
+## Project structure
+- `src/pages` — page-level views such as the welcome screen, authentication, and apartment details.
+- `src/components` — reusable UI and apartment features such as budget, payments, and the guide modal.
+- `src/utils` — shared helpers for money, payment calculations, and UI utilities.
+- `src/lib` — Supabase client and authentication context.
