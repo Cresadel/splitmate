@@ -7,10 +7,13 @@ import { useAuth } from '../lib/auth'
 
 export default function Auth() {
   const { session } = useAuth()
+  // Full app URL incl. the /splitmate/ base, so email/Google redirects stay inside this app
+  const home = window.location.origin + import.meta.env.BASE_URL
   const [mode, setMode] = useState('login') // login | register | reset
   const [f, setF] = useState({ name: '', email: '', password: '', confirm: '' })
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
+  if (session === undefined) return <div className="p-10 text-muted">Loading...</div>
   if (session) return <Navigate to="/" replace />
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
 
@@ -23,10 +26,10 @@ export default function Auth() {
     let error
     if (mode === 'login') ({ error } = await supabase.auth.signInWithPassword({ email: f.email, password: f.password }))
     else if (mode === 'register') {
-      let data; ({ data, error } = await supabase.auth.signUp({ email: f.email, password: f.password, options: { data: { full_name: f.name.trim() }, emailRedirectTo: window.location.origin } }))
+      let data; ({ data, error } = await supabase.auth.signUp({ email: f.email, password: f.password, options: { data: { full_name: f.name.trim() }, emailRedirectTo: home } }))
       if (!error && !data.session) toast.success('Check your email to confirm your account')
     } else {
-      ({ error } = await supabase.auth.resetPasswordForEmail(f.email, { redirectTo: window.location.origin }))
+      ({ error } = await supabase.auth.resetPasswordForEmail(f.email, { redirectTo: home }))
       if (!error) toast.success('Password reset email sent')
     }
     setBusy(false)
@@ -34,7 +37,7 @@ export default function Auth() {
   }
 
   async function google() {
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: home } })
     if (error) toast.error(error.message)
   }
 
