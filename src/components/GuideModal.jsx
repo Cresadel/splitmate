@@ -29,7 +29,7 @@ const STEPS = [
   },
   {
     title: 'Record who paid their share',
-    body: "In Payments, record each person's payment for the month. You will see Paid, Partial, Unpaid or Advance. Extra money paid carries over to the next month.",
+    body: 'In Payments, the owner records each person\'s payment for the month. Everyone can see the status: Paid, Partial, Unpaid or Advance. Extra money paid carries over to the next month.',
   },
   {
     title: 'Add shared costs',

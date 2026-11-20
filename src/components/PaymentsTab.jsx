@@ -3,7 +3,7 @@ import { format } from 'date-fns'
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
-import { peso, toCents } from '../utils/money'
+import { peso, toCents, formatAmountInput, parseAmount } from '../utils/money'
 import {
   addMonths,
   computePayments,
@@ -15,7 +15,7 @@ import {
 } from '../utils/payments'
 import { Avatar } from '../utils/ui'
 
-export default function PaymentsTab({ gid, members, me, onGoBudget, isLeft = false }) {
+export default function PaymentsTab({ gid, members, me, onGoBudget, isOwner, isLeft = false }) {
   const [payments, setPayments] = useState([])
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -24,7 +24,7 @@ export default function PaymentsTab({ gid, members, me, onGoBudget, isLeft = fal
     return new Date(now.getFullYear(), now.getMonth(), 1)
   })
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ user_id: me, amount: '', month: monthKeyOf(new Date()), note: '' })
+  const [form, setForm] = useState({ user_id: me, amount: formatAmountInput(''), month: monthKeyOf(new Date()), note: '' })
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(null)
   const [expanded, setExpanded] = useState(null)
@@ -66,7 +66,7 @@ export default function PaymentsTab({ gid, members, me, onGoBudget, isLeft = fal
       created_by: me,
     })
     setSaving(false)
-    if (error) return toast.error(error.message)
+    if (error) return toast.error('Only the apartment owner can record payments.')
     setShowForm(false)
     setForm({ user_id: me, amount: '', month: monthKeyOf(selectedMonth), note: '' })
     load()
@@ -77,7 +77,7 @@ export default function PaymentsTab({ gid, members, me, onGoBudget, isLeft = fal
     setDeleting(id)
     const { error } = await supabase.from('budget_payments').delete().eq('id', id)
     setDeleting(null)
-    error ? toast.error(error.message) : load()
+    error ? toast.error('Only the apartment owner can record payments.') : load()
   }
 
   if (loading) return <div className="card text-sm text-muted">Loading payments...</div>
@@ -149,10 +149,12 @@ export default function PaymentsTab({ gid, members, me, onGoBudget, isLeft = fal
             <div><label className="label">Member</label><select className="input" value={form.user_id} onChange={(e) => setForm({ ...form, user_id: e.target.value })}>{activeMembers.map((m) => <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>)}</select></div>
             <div>
               <div className="flex items-end justify-between gap-2">
-                <label className="label">Amount (₱)</label>
-                <button type="button" onClick={() => setForm({ ...form, amount: (formRemaining / 100).toFixed(2) })} disabled={formRemaining <= 0} className="mb-1.5 text-xs font-medium text-ink underline disabled:text-muted disabled:no-underline">Pay full share</button>
+<label className="label">Amount (₱)</label>
+              {isOwner && !isLeft && (
+                <button type="button" onClick={() => setForm({ ...form, amount: formatAmountInput(String(formRemaining / 100)) })} disabled={formRemaining <= 0} className="mb-1.5 text-xs font-medium text-ink underline disabled:text-muted disabled:no-underline">Pay full share</button>
+              )}
               </div>
-              <input type="number" step="0.01" min="0" className="input" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" />
+              <input type="text" inputMode="decimal" className="input" value={formatAmountInput(form.amount)} onChange={(e) => setForm({ ...form, amount: formatAmountInput(e.target.value) })} placeholder="0.00" />
             </div>
             <div><label className="label">Month</label><input type="month" className="input" value={form.month} onChange={(e) => setForm({ ...form, month: e.target.value })} /></div>
             <div><label className="label">Note (optional)</label><input className="input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="GCash, Cash..." /></div>
@@ -164,10 +166,12 @@ export default function PaymentsTab({ gid, members, me, onGoBudget, isLeft = fal
       <div className="card space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-semibold">Member payments</h2>
-          {!isLeft && <button className="btn-ghost !px-3 !text-xs sm:!px-4 sm:!text-sm" onClick={openForm}><Plus size={16} />Record payment</button>}
+          {isOwner && !isLeft && <button className="btn-ghost !px-3 !text-xs sm:!px-4 sm:!text-sm" onClick={openForm}><Plus size={16} />Record payment</button>}
         </div>
 
         {!hasPaymentsThisMonth && <p className="text-sm text-muted">No payments recorded this month.</p>}
+
+        {!isOwner && !isLeft && <p className="text-sm text-muted">Only the apartment owner records payments.</p>}
 
         <div className="divide-y divide-line">
           {rows.map((r) => {
@@ -199,7 +203,7 @@ export default function PaymentsTab({ gid, members, me, onGoBudget, isLeft = fal
                         {r.monthPayments.map((p) => (
                           <div key={p.id} className="flex items-center justify-between gap-2 text-xs">
                             <span className="min-w-0 break-words text-muted">{format(new Date(p.created_at), 'MMM d')} · {peso(p.amount)}{p.note && ` · ${p.note}`}</span>
-                            {!isLeft && <button type="button" aria-label="Delete payment" onClick={() => removePayment(p.id)} disabled={deleting === p.id} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition hover:text-bad disabled:opacity-50"><Trash2 size={14} /></button>}
+                            {isOwner && !isLeft && <button type="button" aria-label="Delete payment" onClick={() => removePayment(p.id)} disabled={deleting === p.id} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition hover:text-bad disabled:opacity-50"><Trash2 size={14} /></button>}
                           </div>
                         ))}
                       </div>

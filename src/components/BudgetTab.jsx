@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
-import { peso, toCents } from '../utils/money'
+import { peso, toCents, formatAmountInput, parseAmount } from '../utils/money'
 import { catLabel } from '../utils/ui'
 
 const SUGGESTIONS = ['Rent', 'Electricity', 'Water', 'Internet', 'Groceries', 'Supplies']
@@ -114,7 +114,7 @@ export default function BudgetTab({ gid, members, isOwner, isLeft = false, expen
                   <form key={item.id} onSubmit={saveEdit} className="space-y-2 py-3">
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       <input className="input" value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
-                      <input type="number" step="0.01" min="0" className="input" value={editing.amount} onChange={(e) => setEditing({ ...editing, amount: e.target.value })} />
+                      <input type="text" inputMode="decimal" className="input" value={formatAmountInput(editing.amount)} onChange={(e) => setEditing({ ...editing, amount: formatAmountInput(e.target.value) })} />
                     </div>
                     <div className="flex gap-2">
                       <button className="btn w-full sm:w-auto" disabled={savingEdit}>Save</button>
@@ -169,7 +169,7 @@ export default function BudgetTab({ gid, members, isOwner, isLeft = false, expen
               </div>
               <div className="sm:w-32">
                 <label className="label">Amount (₱)</label>
-                <input type="number" step="0.01" min="0" className="input" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
+                <input type="text" inputMode="decimal" className="input" value={formatAmountInput(amount)} onChange={(e) => setAmount(formatAmountInput(e.target.value))} placeholder="0.00" />
               </div>
               <button className="btn w-full sm:w-auto" disabled={adding}>{adding ? 'Adding...' : <><Plus size={16} />Add item</>}</button>
             </div>
