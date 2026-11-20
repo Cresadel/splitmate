@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { Plus, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
@@ -164,7 +164,7 @@ export default function GroupDetail() {
         <div className="card divide-y divide-line p-0">
           {expenses.map((e) => (
             <div key={e.id} className="flex items-center justify-between gap-3 p-4 text-sm">
-              <div className="flex min-w-0 items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-xl sm:h-11 sm:w-11">{catIcon(e.category)}</span><div className="min-w-0"><p className="truncate font-semibold">{e.title}</p><p className="break-words text-xs text-muted">{catLabel(e.category)} · paid by {name(e.paid_by)} · {format(new Date(e.expense_date), 'MMM d, yyyy')} · {e.split_type}</p></div></div>
+              <div className="flex min-w-0 items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-xl sm:h-11 sm:w-11">{catIcon(e.category)}</span><div className="min-w-0"><p className="truncate font-semibold">{e.title}</p><p className="break-words text-xs text-muted">{catLabel(e.category)} · paid by {name(e.paid_by)} · {format(parseISO(e.expense_date), 'MMM d, yyyy')} · {e.split_type}</p></div></div>
               <div className="flex shrink-0 items-center gap-3"><span className="font-medium">{peso(e.amount)}</span>
                 {(isOwner || e.paid_by === user.id) && !isLeft && <button aria-label="Delete expense" onClick={() => delExpense(e.id)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted hover:text-bad"><Trash2 size={15} /></button>}</div>
             </div>))}
@@ -269,7 +269,7 @@ export default function GroupDetail() {
         <div className="card divide-y divide-line p-0">
           {settles.map((s) => (
             <div key={s.id} className="flex justify-between gap-3 p-4 text-sm">
-              <div className="min-w-0 break-words">{name(s.paid_by)} paid {name(s.received_by)}<p className="text-xs text-muted">{format(new Date(s.settlement_date), 'MMM d, yyyy')} {s.note && `· ${s.note}`}</p></div>
+              <div className="min-w-0 break-words">{name(s.paid_by)} paid {name(s.received_by)}<p className="text-xs text-muted">{format(parseISO(s.settlement_date), 'MMM d, yyyy')} {s.note && `· ${s.note}`}</p></div>
               <span className="shrink-0 font-medium">{peso(s.amount)}</span>
             </div>))}
         </div>)}
