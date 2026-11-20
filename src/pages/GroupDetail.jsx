@@ -5,7 +5,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
-import { peso, toCents, formatAmountInput, parseAmount } from '../utils/money'
+import { peso, toCents, splitEqual, netOf } from '../utils/money'
 import { Avatar, catIcon, catLabel, CATEGORIES } from '../utils/ui'
 import BudgetTab from '../components/BudgetTab'
 import PaymentsTab from '../components/PaymentsTab'
@@ -158,7 +158,7 @@ export default function GroupDetail() {
 
       {tab === 'budget' && <BudgetTab gid={id} members={members} isOwner={isOwner} isLeft={isLeft} expenses={expenses} />}
 
-      {tab === 'payments' && <PaymentsTab gid={id} members={members} me={user.id} isOwner={isOwner} isLeft={isLeft} onGoBudget={() => setTab('budget')} />}
+      {tab === 'payments' && <PaymentsTab gid={id} members={members} me={user.id} isLeft={isLeft} onGoBudget={() => setTab('budget')} />}
 
       {tab === 'expenses' && (expenses.length === 0 ? <div className="card text-center text-sm text-muted">No expenses yet. Add the first one, like rent or electricity.</div> :
         <div className="card divide-y divide-line p-0">
@@ -305,7 +305,7 @@ function ExpenseForm({ gid, members, me, onDone }) {
       <h2 className="font-medium">Add expense</h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div><label className="label">Title</label><input className="input" value={f.title} onChange={set('title')} /></div>
-        <div><label className="label">Amount (₱)</label><input type="text" inputMode="decimal" className="input" value={formatAmountInput(f.amount)} onChange={(e) => setF({ ...f, amount: formatAmountInput(e.target.value) })} /></div>
+        <div><label className="label">Amount (₱)</label><input type="number" step="0.01" min="0" className="input" value={f.amount} onChange={set('amount')} /></div>
         <div><label className="label">Category</label><select className="input" value={f.category} onChange={set('category')}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
         <div><label className="label">Date</label><input type="date" className="input" value={f.date} onChange={set('date')} /></div>
         <div><label className="label">Paid by</label><select className="input" value={f.paid_by} onChange={set('paid_by')}>{members.map((m) => <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>)}</select></div>
@@ -327,7 +327,7 @@ function ExpenseForm({ gid, members, me, onDone }) {
         {members.map((m) => (
           <div key={m.user_id} className="flex min-h-[40px] items-center justify-between gap-3 py-2 text-sm">
             <label className="flex min-w-0 items-center gap-2"><input type="checkbox" checked={picked.includes(m.user_id)} onChange={() => toggle(m.user_id)} /><span className="truncate">{m.profiles?.full_name}</span></label>
-            {f.type === 'custom' && picked.includes(m.user_id) && <input type="text" inputMode="decimal" className="input w-28" placeholder="Share" value={formatAmountInput(custom[m.user_id] || '')} onChange={(e) => setCustom({ ...custom, [m.user_id]: formatAmountInput(e.target.value) })} />}
+            {f.type === 'custom' && picked.includes(m.user_id) && <input type="number" step="0.01" className="input w-28" placeholder="Share" value={custom[m.user_id] || ''} onChange={(e) => setCustom({ ...custom, [m.user_id]: e.target.value })} />}
           </div>))}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row"><button className="btn w-full sm:w-auto" disabled={busy}>Save expense</button><button type="button" className="btn-ghost w-full justify-center sm:w-auto" onClick={onDone}>Cancel</button></div>
@@ -357,7 +357,7 @@ function SettleForm({ gid, members, balances = [], me, initial, onDone }) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div><label className="label">Paid by</label><input className="input" value={payerName} disabled /></div>
         <div><label className="label">Paid to</label><select className="input" value={f.to} onChange={set('to')}>{receivers.map((m) => <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>)}</select></div>
-        <div><label className="label">Amount (₱)</label><input type="text" inputMode="decimal" className="input" value={formatAmountInput(f.amount)} onChange={(e) => setF({ ...f, amount: formatAmountInput(e.target.value) })} /></div>
+        <div><label className="label">Amount (₱)</label><input type="number" step="0.01" min="0" className="input" value={f.amount} onChange={set('amount')} /></div>
         <div><label className="label">Date</label><input type="date" className="input" value={f.date} onChange={set('date')} /></div>
         <div><label className="label">Note (optional)</label><input className="input" value={f.note} onChange={set('note')} /></div>
       </div>
